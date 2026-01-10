@@ -1,0 +1,23 @@
+.DS_Store
+node_modules
+/build
+/.svelte-kit
+/package
+.env
+.env.*
+!.env.example
+vite.config.js.timestamp-*
+vite.config.ts.timestamp-*
+
+# Electron
+dist
+*.js
+!svelte.config.js
+!vite.config.ts
+electron/**/*.js
+electron/**/*.js.map
+
+# DB
+*.db
+*.db-shm
+*.db-wal
