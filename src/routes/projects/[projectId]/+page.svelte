@@ -1,7 +1,14 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import { marked } from 'marked';
   import { electronApi } from '$lib/api';
   import type { EntryDetail, EntrySummary } from '../../../../electron/api-types';
+  
+  // Markdownパーサーの設定
+  marked.setOptions({
+    breaks: true, // 改行を<br>に変換
+    gfm: true, // GitHub Flavored Markdown
+  });
   
   // URLから直接projectIdを取得
   const getProjectIdFromUrl = (): string => {
@@ -15,12 +22,16 @@
   let isNewEntry = $state(true);
   let loading = $state(true);
   let searchQuery = $state('');
-  let activeTab: 'edit' | 'preview' = $state('edit');
 
   // 編集フォーム
   let editTitle = $state('');
   let editBody = $state('');
   let editIsStarred = $state(false);
+
+  // Markdownをリアクティブに変換
+  let renderedMarkdown = $derived(
+    editBody ? marked(editBody) as string : ''
+  );
 
   onMount(async () => {
     projectId = getProjectIdFromUrl();
@@ -57,7 +68,6 @@
       editBody = result.entry.body_markdown;
       editIsStarred = result.entry.is_starred;
       isNewEntry = false;
-      activeTab = 'edit';
     } catch (error) {
       console.error('Failed to load entry:', error);
       alert('エントリの読み込みに失敗しました');
@@ -70,7 +80,6 @@
     editBody = '';
     editIsStarred = false;
     isNewEntry = true;
-    activeTab = 'edit';
   }
 
   async function saveEntry() {
@@ -93,7 +102,7 @@
         body_markdown: editBody,
         is_starred: editIsStarred
       });
-      
+      console.log('Save result:', result);
       if (!result || !result.id) {
         alert('保存に失敗しました（レスポンスが不正です）');
         return;
@@ -218,91 +227,68 @@
       </div>
     </aside>
 
-    <!-- 右ペイン：編集エリア -->
-    <main class="main-content">
-      <div class="tabs">
-        <button
-          class="tab"
-          class:active={activeTab === 'edit'}
-          onclick={() => activeTab = 'edit'}
-        >
-          編集
-        </button>
-        <button
-          class="tab"
-          class:active={activeTab === 'preview'}
-          onclick={() => activeTab = 'preview'}
-        >
-          プレビュー
-        </button>
+    <!-- 中央ペイン：編集エリア -->
+    <div class="editor-pane">
+      <div class="pane-header">
+        <h3>✏️ 編集</h3>
       </div>
+      <div class="edit-form">
+        <input
+          type="text"
+          placeholder="タイトル（任意）"
+          bind:value={editTitle}
+          class="title-input"
+        />
 
-      <div class="editor-area">
-        {#if activeTab === 'edit'}
-          <div class="edit-form">
-            <input
-              type="text"
-              placeholder="タイトル（任意）"
-              bind:value={editTitle}
-              class="title-input"
-            />
+        <textarea
+          placeholder="プロンプトをMarkdown形式で入力..."
+          bind:value={editBody}
+          class="body-textarea"
+        ></textarea>
 
-            <textarea
-              placeholder="プロンプトをMarkdown形式で入力..."
-              bind:value={editBody}
-              class="body-textarea"
-            ></textarea>
-
-            <div class="actions">
-              <div class="actions-left">
-                <button class="btn btn-primary" onclick={saveEntry}>
-                  💾 保存
-                </button>
-                <button class="btn btn-secondary" onclick={copyToClipboard}>
-                  📋 コピー
-                </button>
-                {#if !isNewEntry}
-                  <button class="btn btn-secondary" onclick={toggleStar}>
-                    {editIsStarred ? '⭐' : '☆'} スター
-                  </button>
-                {/if}
-              </div>
-
-              <div class="actions-right">
-                {#if !isNewEntry}
-                  <button class="btn btn-danger" onclick={deleteEntry}>
-                    🗑️ 削除
-                  </button>
-                {/if}
-                <button class="btn btn-secondary" onclick={startNewEntry}>
-                  📄 新規クリア
-                </button>
-              </div>
-            </div>
-          </div>
-        {:else}
-          <div class="preview-area">
-            <div class="preview-content">
-              {#if editTitle}
-                <h1>{editTitle}</h1>
-              {/if}
-              <div class="markdown-body">
-                {@html editBody
-                  .replace(/&/g, '&amp;')
-                  .replace(/</g, '&lt;')
-                  .replace(/>/g, '&gt;')
-                  .replace(/\n/g, '<br>')}
-              </div>
-            </div>
-            <div class="preview-actions">
-              <button class="btn btn-secondary" onclick={copyToClipboard}>
-                📋 コピー
+        <div class="actions">
+          <div class="actions-left">
+            <button class="btn btn-primary" onclick={saveEntry}>
+              💾 保存
+            </button>
+            <button class="btn btn-secondary" onclick={copyToClipboard}>
+              📋 コピー
+            </button>
+            {#if !isNewEntry}
+              <button class="btn btn-secondary" onclick={toggleStar}>
+                {editIsStarred ? '⭐' : '☆'} スター
               </button>
-            </div>
+            {/if}
           </div>
-        {/if}
+
+          <div class="actions-right">
+            {#if !isNewEntry}
+              <button class="btn btn-danger" onclick={deleteEntry}>
+                🗑️ 削除
+              </button>
+            {/if}
+            <button class="btn btn-secondary" onclick={startNewEntry}>
+              📄 新規クリア
+            </button>
+          </div>
+        </div>
       </div>
-    </main>
+    </div>
+
+    <!-- 右ペイン：プレビューエリア -->
+    <div class="preview-pane">
+      <div class="pane-header">
+        <h3>👁️ プレビュー</h3>
+      </div>
+      <div class="preview-content">
+        {#if editTitle}
+          <h1>{editTitle}</h1>
+        {/if}
+        <div class="markdown-body">
+          {@html renderedMarkdown}
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -428,50 +414,44 @@
     white-space: nowrap;
   }
 
-  /* 右ペイン */
-  .main-content {
+  /* 中央ペイン：編集エリア */
+  .editor-pane {
     flex: 1;
     display: flex;
     flex-direction: column;
     overflow: hidden;
+    border-right: 1px solid var(--color-border);
   }
 
-  .tabs {
-    display: flex;
-    border-bottom: 1px solid var(--color-border);
-    background-color: white;
-  }
-
-  .tab {
-    padding: 0.75rem 1.5rem;
-    border: none;
-    background: none;
-    font-weight: 500;
-    color: var(--color-text-secondary);
-    border-bottom: 2px solid transparent;
-    transition: all 0.2s;
-  }
-
-  .tab:hover {
-    color: var(--color-text);
-  }
-
-  .tab.active {
-    color: var(--color-primary);
-    border-bottom-color: var(--color-primary);
-  }
-
-  .editor-area {
+  /* 右ペイン：プレビューエリア */
+  .preview-pane {
     flex: 1;
+    display: flex;
+    flex-direction: column;
     overflow: hidden;
+    background-color: var(--color-bg-secondary);
+  }
+
+  .pane-header {
+    padding: 1rem 1.5rem;
+    background-color: white;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .pane-header h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    margin: 0;
+    color: var(--color-text-secondary);
   }
 
   .edit-form {
-    height: 100%;
+    flex: 1;
     display: flex;
     flex-direction: column;
     padding: 1.5rem;
     gap: 1rem;
+    overflow: hidden;
   }
 
   .title-input {
@@ -505,19 +485,12 @@
   }
 
   /* プレビュー */
-  .preview-area {
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    padding: 1.5rem;
-    gap: 1rem;
-  }
-
   .preview-content {
     flex: 1;
     overflow-y: auto;
     padding: 1.5rem;
     background-color: white;
+    margin: 1.5rem;
     border: 1px solid var(--color-border);
     border-radius: 4px;
   }
@@ -529,11 +502,121 @@
 
   .markdown-body {
     line-height: 1.8;
-    white-space: pre-wrap;
+    color: var(--color-text);
   }
 
-  .preview-actions {
-    display: flex;
-    gap: 0.75rem;
+  /* Markdownスタイル */
+  .markdown-body :global(h1) {
+    font-size: 2em;
+    font-weight: 600;
+    margin-top: 1.5em;
+    margin-bottom: 0.5em;
+    border-bottom: 1px solid var(--color-border);
+    padding-bottom: 0.3em;
+  }
+
+  .markdown-body :global(h2) {
+    font-size: 1.5em;
+    font-weight: 600;
+    margin-top: 1.5em;
+    margin-bottom: 0.5em;
+    border-bottom: 1px solid var(--color-border);
+    padding-bottom: 0.3em;
+  }
+
+  .markdown-body :global(h3) {
+    font-size: 1.25em;
+    font-weight: 600;
+    margin-top: 1.5em;
+    margin-bottom: 0.5em;
+  }
+
+  .markdown-body :global(h4),
+  .markdown-body :global(h5),
+  .markdown-body :global(h6) {
+    font-weight: 600;
+    margin-top: 1.5em;
+    margin-bottom: 0.5em;
+  }
+
+  .markdown-body :global(p) {
+    margin-bottom: 1em;
+  }
+
+  .markdown-body :global(ul),
+  .markdown-body :global(ol) {
+    margin-bottom: 1em;
+    padding-left: 2em;
+  }
+
+  .markdown-body :global(li) {
+    margin-bottom: 0.25em;
+  }
+
+  .markdown-body :global(code) {
+    background-color: rgba(175, 184, 193, 0.2);
+    padding: 0.2em 0.4em;
+    border-radius: 3px;
+    font-family: 'Courier New', monospace;
+    font-size: 0.9em;
+  }
+
+  .markdown-body :global(pre) {
+    background-color: #f6f8fa;
+    padding: 1em;
+    border-radius: 6px;
+    overflow-x: auto;
+    margin-bottom: 1em;
+  }
+
+  .markdown-body :global(pre code) {
+    background-color: transparent;
+    padding: 0;
+  }
+
+  .markdown-body :global(blockquote) {
+    border-left: 4px solid var(--color-border);
+    padding-left: 1em;
+    margin-left: 0;
+    margin-bottom: 1em;
+    color: var(--color-text-secondary);
+  }
+
+  .markdown-body :global(a) {
+    color: var(--color-primary);
+    text-decoration: none;
+  }
+
+  .markdown-body :global(a:hover) {
+    text-decoration: underline;
+  }
+
+  .markdown-body :global(table) {
+    border-collapse: collapse;
+    width: 100%;
+    margin-bottom: 1em;
+  }
+
+  .markdown-body :global(table th),
+  .markdown-body :global(table td) {
+    border: 1px solid var(--color-border);
+    padding: 0.5em;
+    text-align: left;
+  }
+
+  .markdown-body :global(table th) {
+    background-color: var(--color-bg-secondary);
+    font-weight: 600;
+  }
+
+  .markdown-body :global(hr) {
+    border: none;
+    border-top: 1px solid var(--color-border);
+    margin: 1.5em 0;
+  }
+
+  .markdown-body :global(img) {
+    max-width: 100%;
+    height: auto;
   }
 </style>

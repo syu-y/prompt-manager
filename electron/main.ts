@@ -5,6 +5,15 @@ import { registerProjectHandlers } from './ipc/projects.js';
 import { registerEntryHandlers } from './ipc/entries.js';
 import { registerTagHandlers } from './ipc/tags.js';
 
+// IME（日本語入力）を有効化
+// Linux/WSL2環境での日本語入力を改善
+if (process.platform === 'linux') {
+  // X11でのIME有効化を試みる
+  app.commandLine.appendSwitch('disable-features', 'UseOzonePlatform');
+  // GPU加速を無効化することでIMEの問題を回避
+  app.commandLine.appendSwitch('disable-gpu');
+}
+
 let mainWindow: BrowserWindow | null = null;
 
 function createWindow() {

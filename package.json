@@ -11,7 +11,7 @@
   "scripts": {
     "dev": "npm run sync && npm run build:electron && concurrently \"npm run dev:svelte\" \"npm run dev:electron\"",
     "dev:svelte": "vite dev",
-    "dev:electron": "wait-on http://localhost:5173 && cross-env NODE_ENV=development electron .",
+    "dev:electron": "wait-on http://localhost:5173 && cross-env NODE_ENV=development electron . --enable-features=UseOzonePlatform --ozone-platform=wayland --enable-wayland-ime",
     "sync": "svelte-kit sync",
     "rebuild": "electron-rebuild -f -w better-sqlite3",
     "postinstall": "npm run rebuild",
@@ -47,7 +47,8 @@
     "wait-on": "^8.0.1"
   },
   "dependencies": {
-    "better-sqlite3": "^9.6.0"
+    "better-sqlite3": "^9.6.0",
+    "marked": "^17.0.1"
   },
   "build": {
     "appId": "com.promptmanager.app",
