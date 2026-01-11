@@ -89,15 +89,26 @@ export const electronApi: API = {
         () => getApi().entries.toggleStar(id, is_starred),
         "Failed to toggle star:"
       );
+    },
+    toggleLock(id: string, is_locked: boolean) {
+      return withIpcLog(
+        "entries",
+        "toggleLock",
+        () => getApi().entries.toggleLock(id, is_locked),
+        "Failed to toggle lock:"
+      );
     }
   },
 
   tags: {
-    list(project_id: string) {
-      return withIpcLog("tags", "list", () => getApi().tags.list(project_id), "Failed to list tags:");
+    list() {
+      return withIpcLog("tags", "list", () => getApi().tags.list(), "Failed to list tags:");
     },
-    create(project_id: string, name: string, color?: string) {
-      return withIpcLog("tags", "create", () => getApi().tags.create(project_id, name, color), "Failed to create tag:");
+    create(name: string, category?: string, color?: string) {
+      return withIpcLog("tags", "create", () => getApi().tags.create(name, category, color), "Failed to create tag:");
+    },
+    delete(id: string) {
+      return withIpcLog("tags", "delete", () => getApi().tags.delete(id), "Failed to delete tag:");
     },
     attach(entry_id: string, tag_ids: string[]) {
       return withIpcLog("tags", "attach", () => getApi().tags.attach(entry_id, tag_ids), "Failed to attach tags:");

@@ -18,6 +18,7 @@ interface UpsertEntryParams {
   body_markdown: string;
   source_json?: string;
   is_starred?: boolean;
+  is_locked?: boolean;
   tag_ids?: string[];
 }
 
@@ -33,6 +34,7 @@ export function registerEntryHandlers(ipcMain: IpcMain): void {
         pe.title,
         pe.updated_at,
         pe.is_starred,
+        pe.is_locked,
         SUBSTR(pe.body_markdown, 1, 100) as snippet
       FROM prompt_entries pe
       WHERE pe.project_id = ?
@@ -89,6 +91,7 @@ export function registerEntryHandlers(ipcMain: IpcMain): void {
         body_markdown,
         source_json,
         is_starred,
+        is_locked,
         created_at,
         updated_at
       FROM prompt_entries
@@ -126,6 +129,7 @@ export function registerEntryHandlers(ipcMain: IpcMain): void {
       body_markdown,
       source_json,
       is_starred = false,
+      is_locked = false,
       tag_ids = []
     } = params;
 
@@ -142,6 +146,7 @@ export function registerEntryHandlers(ipcMain: IpcMain): void {
               body_markdown = ?,
               source_json = ?,
               is_starred = ?,
+              is_locked = ?,
               updated_at = ?
           WHERE id = ?
         `).run(
@@ -149,6 +154,7 @@ export function registerEntryHandlers(ipcMain: IpcMain): void {
           body_markdown,
           source_json || null,
           is_starred ? 1 : 0,
+          is_locked ? 1 : 0,
           timestamp,
           id
         );
@@ -157,8 +163,8 @@ export function registerEntryHandlers(ipcMain: IpcMain): void {
         db.prepare(`
           INSERT INTO prompt_entries (
             id, project_id, title, body_markdown, source_json,
-            is_starred, created_at, updated_at
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            is_starred, is_locked, created_at, updated_at
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         `).run(
           id,
           project_id,
@@ -166,6 +172,7 @@ export function registerEntryHandlers(ipcMain: IpcMain): void {
           body_markdown,
           source_json || null,
           is_starred ? 1 : 0,
+          is_locked ? 1 : 0,
           timestamp,
           timestamp
         );
@@ -213,6 +220,20 @@ export function registerEntryHandlers(ipcMain: IpcMain): void {
       SET is_starred = ?, updated_at = ?
       WHERE id = ?
     `).run(is_starred ? 1 : 0, timestamp, id);
+
+    return { ok: true };
+  });
+
+  // ロック切り替え
+  ipcMain.handle('entries:toggleLock', async (_, { id, is_locked }: { id: string; is_locked: boolean }) => {
+    const db = getDatabase();
+    const timestamp = now();
+
+    db.prepare(`
+      UPDATE prompt_entries
+      SET is_locked = ?, updated_at = ?
+      WHERE id = ?
+    `).run(is_locked ? 1 : 0, timestamp, id);
 
     return { ok: true };
   });

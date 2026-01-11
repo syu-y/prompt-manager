@@ -30,20 +30,25 @@ const api: API = {
       body_markdown: string;
       source_json?: string;
       is_starred?: boolean;
+      is_locked?: boolean;
       tag_ids?: string[];
     }) => ipcRenderer.invoke('entries:upsert', params),
 
     delete: (id: string) => ipcRenderer.invoke('entries:delete', { id }),
 
     toggleStar: (id: string, is_starred: boolean) =>
-      ipcRenderer.invoke('entries:toggleStar', { id, is_starred })
+      ipcRenderer.invoke('entries:toggleStar', { id, is_starred }),
+
+    toggleLock: (id: string, is_locked: boolean) =>
+      ipcRenderer.invoke('entries:toggleLock', { id, is_locked })
   },
 
   // Tags
   tags: {
-    list: (project_id: string) => ipcRenderer.invoke('tags:list', { project_id }),
-    create: (project_id: string, name: string, color?: string) =>
-      ipcRenderer.invoke('tags:create', { project_id, name, color }),
+    list: () => ipcRenderer.invoke('tags:list'),
+    create: (name: string, category?: string, color?: string) =>
+      ipcRenderer.invoke('tags:create', { name, category, color }),
+    delete: (id: string) => ipcRenderer.invoke('tags:delete', { id }),
     attach: (entry_id: string, tag_ids: string[]) =>
       ipcRenderer.invoke('tags:attach', { entry_id, tag_ids })
   }

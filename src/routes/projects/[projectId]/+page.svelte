@@ -2,7 +2,7 @@
   import { onMount } from 'svelte';
   import { marked } from 'marked';
   import { electronApi } from '$lib/api';
-  import type { EntryDetail, EntrySummary } from '../../../../electron/api-types';
+  import type { EntryDetail, EntrySummary, Tag } from '../../../../electron/api-types';
   
   // Markdownパーサーの設定
   marked.setOptions({
@@ -23,10 +23,15 @@
   let loading = $state(true);
   let searchQuery = $state('');
 
+  // タグ関連
+  let allTags: Tag[] = $state([]);
+  let selectedTagIds: string[] = $state([]);
+
   // 編集フォーム
   let editTitle = $state('');
   let editBody = $state('');
   let editIsStarred = $state(false);
+  let editIsLocked = $state(false);
 
   // Markdownをリアクティブに変換
   let renderedMarkdown = $derived(
@@ -35,8 +40,18 @@
 
   onMount(async () => {
     projectId = getProjectIdFromUrl();
+    await loadTags();
     await loadEntries();
   });
+
+  async function loadTags() {
+    try {
+      const result = await electronApi.tags.list();
+      allTags = result.tags;
+    } catch (error) {
+      console.error('Failed to load tags:', error);
+    }
+  }
 
   async function loadEntries() {
 
@@ -67,6 +82,8 @@
       editTitle = result.entry.title || '';
       editBody = result.entry.body_markdown;
       editIsStarred = result.entry.is_starred;
+      editIsLocked = result.entry.is_locked;
+      selectedTagIds = result.entry.tag_ids || [];
       isNewEntry = false;
     } catch (error) {
       console.error('Failed to load entry:', error);
@@ -79,6 +96,8 @@
     editTitle = '';
     editBody = '';
     editIsStarred = false;
+    editIsLocked = false;
+    selectedTagIds = [];
     isNewEntry = true;
   }
 
@@ -94,14 +113,26 @@
       return;
     }
 
+    // ロック中の場合は保存不可
+    if (editIsLocked && !isNewEntry) {
+      alert('ロック中のエントリは編集できません。先にロックを解除してください。');
+      return;
+    }
+
     try {
-      const result = await electronApi.entries.upsert({
-        id: isNewEntry ? undefined : selectedEntry?.id,
-        project_id: projectId,
-        title: editTitle || undefined,
-        body_markdown: editBody,
-        is_starred: editIsStarred
-      });
+      const params = {
+        id: isNewEntry ? undefined : String(selectedEntry?.id),
+        project_id: String(projectId),
+        title: editTitle ? String(editTitle) : undefined,
+        body_markdown: String(editBody),
+        is_starred: Boolean(editIsStarred),
+        is_locked: Boolean(true),
+        tag_ids: selectedTagIds.length > 0 
+          ? [...selectedTagIds].map(id => String(id))
+          : undefined
+      };
+      const result = await electronApi.entries.upsert(params);
+
       console.log('Save result:', result);
       if (!result || !result.id) {
         alert('保存に失敗しました（レスポンスが不正です）');
@@ -147,6 +178,33 @@
     } catch (error) {
       console.error('Failed to toggle star:', error);
     }
+  }
+
+  async function toggleLock() {
+    if (!selectedEntry) return;
+
+    try {
+      const newLocked = !editIsLocked;
+      await electronApi.entries.toggleLock(selectedEntry.id, newLocked);
+      editIsLocked = newLocked;
+      await loadEntries();
+    } catch (error) {
+      console.error('Failed to toggle lock:', error);
+      alert('ロック状態の変更に失敗しました');
+    }
+  }
+
+  function toggleTag(tagId: string) {
+    if (selectedTagIds.includes(tagId)) {
+      selectedTagIds = selectedTagIds.filter(id => id !== tagId);
+    } else {
+      selectedTagIds = [...selectedTagIds, tagId];
+    }
+  }
+
+  // カテゴリ別にタグをグループ化
+  function getTagsByCategory(category: string): Tag[] {
+    return allTags.filter(tag => tag.category === category);
   }
 
   function copyToClipboard() {
@@ -211,6 +269,9 @@
                 {#if entry.is_starred}
                   <span class="star">⭐</span>
                 {/if}
+                {#if entry.is_locked}
+                  <span class="lock-icon">🔒</span>
+                {/if}
                 <span class="entry-title">
                   {entry.title || '無題'}
                 </span>
@@ -238,13 +299,41 @@
           placeholder="タイトル（任意）"
           bind:value={editTitle}
           class="title-input"
+          disabled={editIsLocked}
         />
 
         <textarea
           placeholder="プロンプトをMarkdown形式で入力..."
           bind:value={editBody}
           class="body-textarea"
+          disabled={editIsLocked}
         ></textarea>
+
+        <!-- タグ選択エリア -->
+        <div class="tags-section">
+          <h4>🏷️ タグ</h4>
+          <div class="tags-container">
+            {#each ['工程', '対象', '性質'] as category}
+              <div class="tag-category">
+                <div class="category-label">{category}</div>
+                <div class="tag-list">
+                  {#each getTagsByCategory(category) as tag}
+                    <button
+                      type="button"
+                      class="tag-chip"
+                      class:selected={selectedTagIds.includes(tag.id)}
+                      style="--tag-color: {tag.color}"
+                      onclick={() => toggleTag(tag.id)}
+                      disabled={editIsLocked}
+                    >
+                      {tag.name}
+                    </button>
+                  {/each}
+                </div>
+              </div>
+            {/each}
+          </div>
+        </div>
 
         <div class="actions">
           <div class="actions-left">
@@ -257,6 +346,13 @@
             {#if !isNewEntry}
               <button class="btn btn-secondary" onclick={toggleStar}>
                 {editIsStarred ? '⭐' : '☆'} スター
+              </button>
+              <button 
+                class="btn btn-secondary"
+                class:btn-lock-active={editIsLocked}
+                onclick={toggleLock}
+              >
+                {editIsLocked ? '🔒' : '🔓'} {editIsLocked ? 'ロック中' : 'ロック'}
               </button>
             {/if}
           </div>
@@ -620,5 +716,97 @@
   .markdown-body :global(img) {
     max-width: 100%;
     height: auto;
+  }
+
+  /* タグ選択エリア */
+  .tags-section {
+    margin-bottom: 1rem;
+  }
+
+  .tags-section h4 {
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+    color: var(--color-text);
+  }
+
+  .tags-container {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .tag-category {
+    display: flex;
+    gap: 0.75rem;
+    align-items: flex-start;
+  }
+
+  .category-label {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--color-text-secondary);
+    min-width: 50px;
+    padding-top: 0.25rem;
+  }
+
+  .tag-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    flex: 1;
+  }
+
+  .tag-chip {
+    padding: 0.375rem 0.75rem;
+    border-radius: 16px;
+    border: 1.5px solid var(--tag-color, #94A3B8);
+    background-color: white;
+    color: var(--tag-color, #64748B);
+    font-size: 0.8125rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .tag-chip:hover:not(:disabled) {
+    background-color: var(--tag-color, #94A3B8);
+    color: white;
+    transform: translateY(-1px);
+  }
+
+  .tag-chip.selected {
+    background-color: var(--tag-color, #94A3B8);
+    color: white;
+    border-color: var(--tag-color, #94A3B8);
+  }
+
+  .tag-chip:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  /* ロックアイコン */
+  .lock-icon {
+    font-size: 0.9rem;
+    margin-right: 0.25rem;
+  }
+
+  /* ロックボタン */
+  .btn-lock-active {
+    background-color: #EF4444;
+    color: white;
+  }
+
+  .btn-lock-active:hover {
+    background-color: #DC2626;
+  }
+
+  /* 無効化された入力欄 */
+  .title-input:disabled,
+  .body-textarea:disabled {
+    background-color: #F3F4F6;
+    cursor: not-allowed;
+    opacity: 0.7;
   }
 </style>
