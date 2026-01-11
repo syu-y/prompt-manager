@@ -18,14 +18,22 @@ let mainWindow: BrowserWindow | null = null;
 
 function createWindow() {
   mainWindow = new BrowserWindow({
-    width: 1400,
-    height: 900,
+    frame: true,
+    minimizable: true,
+    maximizable: true,
+    resizable: true,
+    closable: true,
+    // タイトル設定
+    title: 'Prompt Manager',
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
       nodeIntegration: false
     }
   });
+
+  // ウィンドウを最大化
+  mainWindow.maximize();
 
   // 開発環境ではlocalhost、本番環境ではビルドしたファイルを読み込む
   if (process.env.NODE_ENV === 'development') {
