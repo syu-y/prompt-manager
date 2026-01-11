@@ -32,6 +32,7 @@ export function registerEntryHandlers(ipcMain: IpcMain): void {
       SELECT DISTINCT
         pe.id,
         pe.title,
+        pe.created_at,
         pe.updated_at,
         pe.is_starred,
         pe.is_locked,
@@ -213,13 +214,12 @@ export function registerEntryHandlers(ipcMain: IpcMain): void {
   // スター切り替え
   ipcMain.handle('entries:toggleStar', async (_, { id, is_starred }: { id: string; is_starred: boolean }) => {
     const db = getDatabase();
-    const timestamp = now();
 
     db.prepare(`
       UPDATE prompt_entries
-      SET is_starred = ?, updated_at = ?
+      SET is_starred = ?
       WHERE id = ?
-    `).run(is_starred ? 1 : 0, timestamp, id);
+    `).run(is_starred ? 1 : 0, id);
 
     return { ok: true };
   });
@@ -227,13 +227,12 @@ export function registerEntryHandlers(ipcMain: IpcMain): void {
   // ロック切り替え
   ipcMain.handle('entries:toggleLock', async (_, { id, is_locked }: { id: string; is_locked: boolean }) => {
     const db = getDatabase();
-    const timestamp = now();
 
     db.prepare(`
       UPDATE prompt_entries
-      SET is_locked = ?, updated_at = ?
+      SET is_locked = ?
       WHERE id = ?
-    `).run(is_locked ? 1 : 0, timestamp, id);
+    `).run(is_locked ? 1 : 0, id);
 
     return { ok: true };
   });

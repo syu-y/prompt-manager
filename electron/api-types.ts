@@ -10,6 +10,7 @@ export interface ProjectSummary {
 export interface EntrySummary {
   id: string;
   title?: string;
+  created_at: number;
   updated_at: number;
   is_starred: boolean;
   is_locked: boolean;

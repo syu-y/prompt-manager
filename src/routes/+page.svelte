@@ -72,9 +72,14 @@
 <div class="projects-page">
   <header class="header">
     <h1>Prompt Manager</h1>
-    <button class="btn btn-primary" onclick={() => showCreateModal = true}>
-      ＋ 新規プロジェクト
-    </button>
+    <div class="header-actions">
+      <button class="btn btn-secondary" onclick={() => window.location.href = '/tags'}>
+        🏷️ タグ管理
+      </button>
+      <button class="btn btn-primary" onclick={() => showCreateModal = true}>
+        ＋ 新規プロジェクト
+      </button>
+    </div>
   </header>
 
   <main class="main">
@@ -164,6 +169,11 @@
   .header h1 {
     font-size: 1.5rem;
     font-weight: 600;
+  }
+
+  .header-actions {
+    display: flex;
+    gap: 0.75rem;
   }
 
   .main {

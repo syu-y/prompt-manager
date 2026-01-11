@@ -23,6 +23,10 @@
   let loading = $state(true);
   let searchQuery = $state('');
 
+  // ソート機能
+  let sortBy = $state<'title' | 'created' | 'updated' | 'starred'>('created');
+  let sortOrder = $state<'asc' | 'desc'>('desc');
+
   // タグ関連
   let allTags: Tag[] = $state([]);
   let selectedTagIds: string[] = $state([]);
@@ -37,6 +41,46 @@
   let renderedMarkdown = $derived(
     editBody ? marked(editBody) as string : ''
   );
+
+  // ソート済みエントリリスト
+  let sortedEntries = $derived(() => {
+    const entriesCopy = [...entries];
+    
+    // ソート処理
+    entriesCopy.sort((a, b) => {
+      let comparison = 0;
+      
+      switch (sortBy) {
+        case 'title':
+          const titleA = (a.title || '無題').toLowerCase();
+          const titleB = (b.title || '無題').toLowerCase();
+          comparison = titleA.localeCompare(titleB);
+          break;
+        
+        case 'created':
+          comparison = a.created_at - b.created_at;
+          break;
+        
+        case 'updated':
+          comparison = a.updated_at - b.updated_at;
+          break;
+        
+        case 'starred':
+          // スター付きを先に表示
+          comparison = (b.is_starred ? 1 : 0) - (a.is_starred ? 1 : 0);
+          // 同じスター状態なら更新日時で並べる
+          if (comparison === 0) {
+            comparison = b.updated_at - a.updated_at;
+          }
+          break;
+      }
+      
+      // 昇順・降順の反映
+      return sortOrder === 'asc' ? comparison : -comparison;
+    });
+    
+    return entriesCopy;
+  });
 
   onMount(async () => {
     projectId = getProjectIdFromUrl();
@@ -120,19 +164,18 @@
     }
 
     try {
+      // Svelte 5のProxyオブジェクトをプリミティブな値に変換
       const params = {
-        id: isNewEntry ? undefined : String(selectedEntry?.id),
+        id: isNewEntry ? undefined : (selectedEntry?.id ? String(selectedEntry.id) : undefined),
         project_id: String(projectId),
         title: editTitle ? String(editTitle) : undefined,
         body_markdown: String(editBody),
         is_starred: Boolean(editIsStarred),
         is_locked: Boolean(true),
-        tag_ids: selectedTagIds.length > 0 
-          ? [...selectedTagIds].map(id => String(id))
-          : undefined
+        tag_ids: selectedTagIds.length > 0 ? [...selectedTagIds].map(id => String(id)) : undefined
       };
+      
       const result = await electronApi.entries.upsert(params);
-
       console.log('Save result:', result);
       if (!result || !result.id) {
         alert('保存に失敗しました（レスポンスが不正です）');
@@ -241,6 +284,9 @@
       bind:value={searchQuery}
       class="search-input"
     />
+    <button class="btn btn-primary btn-sm" onclick={startNewEntry}>
+      ＋ 新規
+    </button>
   </header>
 
   <div class="content">
@@ -248,18 +294,32 @@
     <aside class="sidebar">
       <div class="sidebar-header">
         <h2>履歴</h2>
-        <button class="btn btn-primary btn-sm" onclick={startNewEntry}>
-          ＋ 新規
+      </div>
+
+      <!-- ソート選択UI -->
+      <div class="sort-controls">
+        <select bind:value={sortBy} class="sort-select">
+          <option value="created">作成日時</option>
+          <option value="updated">更新日時</option>
+          <option value="title">タイトル</option>
+          <option value="starred">お気に入り</option>
+        </select>
+        <button 
+          class="sort-order-btn"
+          onclick={() => sortOrder = sortOrder === 'asc' ? 'desc' : 'asc'}
+          title={sortOrder === 'asc' ? '昇順' : '降順'}
+        >
+          {sortOrder === 'asc' ? '↑' : '↓'}
         </button>
       </div>
 
       <div class="entries-list">
         {#if loading}
           <p class="loading">読み込み中...</p>
-        {:else if entries.length === 0}
+        {:else if sortedEntries().length === 0}
           <p class="empty">履歴がありません</p>
         {:else}
-          {#each entries as entry (entry.id)}
+          {#each sortedEntries() as entry (entry.id)}
             <button
               class="entry-item"
               class:active={selectedEntry?.id === entry.id}
@@ -277,7 +337,8 @@
                 </span>
               </div>
               <div class="entry-meta">
-                {formatDate(entry.updated_at)}
+                作成 : {formatDate(entry.created_at)}
+                  /  更新 : {formatDate(entry.updated_at)}
               </div>
               <div class="entry-snippet">
                 {entry.snippet}...
@@ -808,5 +869,51 @@
     background-color: #F3F4F6;
     cursor: not-allowed;
     opacity: 0.7;
+  }
+
+  /* ソートコントロール */
+  .sort-controls {
+    display: flex;
+    gap: 0.5rem;
+    padding: 0 1rem 0.75rem 1rem;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .sort-select {
+    flex: 1;
+    padding: 0.375rem 0.5rem;
+    border: 1px solid var(--color-border);
+    border-radius: 4px;
+    background-color: white;
+    font-size: 0.875rem;
+    cursor: pointer;
+  }
+
+  .sort-select:focus {
+    outline: none;
+    border-color: var(--color-primary);
+  }
+
+  .sort-order-btn {
+    width: 2rem;
+    height: 2rem;
+    padding: 0;
+    border: 1px solid var(--color-border);
+    border-radius: 4px;
+    background-color: white;
+    font-size: 1.125rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+  }
+
+  .sort-order-btn:hover {
+    background-color: var(--color-bg-secondary);
+  }
+
+  .sort-order-btn:active {
+    background-color: var(--color-border);
   }
 </style>
