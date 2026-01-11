@@ -27,6 +27,9 @@
   let sortBy = $state<'title' | 'created' | 'updated' | 'starred'>('created');
   let sortOrder = $state<'asc' | 'desc'>('desc');
 
+  // サイドバー開閉
+  let sidebarOpen = $state(true);
+
   // タグ関連
   let allTags: Tag[] = $state([]);
   let selectedTagIds: string[] = $state([]);
@@ -291,11 +294,29 @@
 
   <div class="content">
     <!-- 左ペイン：履歴一覧 -->
-    <aside class="sidebar">
+    <aside class="sidebar" class:closed={!sidebarOpen}>
       <div class="sidebar-header">
-        <h2>履歴</h2>
+        {#if sidebarOpen}
+          <h2>履歴</h2>
+          <button 
+            class="sidebar-toggle-btn"
+            onclick={() => sidebarOpen = !sidebarOpen}
+            title="履歴を閉じる"
+          >
+            ◀
+          </button>
+        {:else}
+          <button 
+            class="sidebar-toggle-btn-collapsed"
+            onclick={() => sidebarOpen = !sidebarOpen}
+            title="履歴を開く"
+          >
+            ▶
+          </button>
+        {/if}
       </div>
 
+      {#if sidebarOpen}
       <!-- ソート選択UI -->
       <div class="sort-controls">
         <select bind:value={sortBy} class="sort-select">
@@ -347,6 +368,7 @@
           {/each}
         {/if}
       </div>
+      {/if}
     </aside>
 
     <!-- 中央ペイン：編集エリア -->
@@ -490,6 +512,11 @@
     display: flex;
     flex-direction: column;
     background-color: var(--color-bg-secondary);
+    transition: width 0.3s ease;
+  }
+
+  .sidebar.closed {
+    width: 48px;
   }
 
   .sidebar-header {
@@ -498,12 +525,56 @@
     align-items: center;
     padding: 1rem;
     border-bottom: 1px solid var(--color-border);
+    min-height: 60px;
+  }
+
+  .sidebar.closed .sidebar-header {
+    justify-content: center;
+    padding: 0.5rem;
   }
 
   .sidebar-header h2 {
     font-size: 1.125rem;
     font-weight: 600;
   }
+
+  /* サイドバートグルボタン（開いている時） */
+  .sidebar-toggle-btn {
+    padding: 0.25rem 0.5rem;
+    background: none;
+    border: 1px solid var(--color-border);
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1rem;
+    color: var(--color-text-secondary);
+    transition: all 0.2s;
+  }
+
+  .sidebar-toggle-btn:hover {
+    background-color: var(--color-bg);
+    color: var(--color-text);
+  }
+
+  /* サイドバートグルボタン（閉じている時） */
+  .sidebar-toggle-btn-collapsed {
+    padding: 0.75rem 0.5rem;
+    background-color: white;
+    border: 1px solid var(--color-border);
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1.125rem;
+    color: var(--color-text-secondary);
+    transition: all 0.2s;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  }
+
+  .sidebar-toggle-btn-collapsed:hover {
+    background-color: var(--color-primary);
+    color: white;
+    transform: scale(1.1);
+  }
+
+  /* フローティングトグルボタンは削除 */
 
   .btn-sm {
     padding: 0.375rem 0.75rem;
