@@ -14,8 +14,8 @@ dist
 # *.js
 !svelte.config.js
 !vite.config.ts
-electron/**/*.js
-electron/**/*.js.map
+electron/**/*.cjs
+electron/**/*.cjs.map
 
 # DB
 *.db
