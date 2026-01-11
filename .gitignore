@@ -11,7 +11,7 @@ vite.config.ts.timestamp-*
 
 # Electron
 dist
-*.js
+# *.js
 !svelte.config.js
 !vite.config.ts
 electron/**/*.js
