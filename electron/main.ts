@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain } from 'electron';
+import { app, BrowserWindow, ipcMain, Menu } from 'electron';
 import * as path from 'path';
 import { initDatabase } from './db/index.js';
 import { registerProjectHandlers } from './ipc/projects.js';
@@ -48,6 +48,9 @@ app.whenReady().then(() => {
   registerProjectHandlers(ipcMain);
   registerEntryHandlers(ipcMain);
   registerTagHandlers(ipcMain);
+
+  // メニューバーを非表示にする
+  Menu.setApplicationMenu(null);
 
   createWindow();
 
