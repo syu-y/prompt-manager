@@ -3,13 +3,13 @@ name: Build Electron App
 on:
   push:
     tags:
-      - 'v*'  # v0.1.0 などのタグをpushすると実行
-  workflow_dispatch:  # 手動実行も可能
+      - 'v*'
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 30  # タイムアウトを30分に設定
+    timeout-minutes: 20
 
     strategy:
       matrix:
@@ -28,11 +28,23 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build app
-        run: npm run build
-        env:
-          # GitHubトークン不要でビルド（アップロードしない）
-          GH_TOKEN: ''
+      - name: Build Vite
+        run: npm run build:vite
+
+      - name: Build Electron
+        run: npm run build:electron
+
+      - name: Package Electron (Linux)
+        if: matrix.os == 'ubuntu-latest'
+        run: npx electron-builder --linux --publish never
+
+      - name: Package Electron (Windows)
+        if: matrix.os == 'windows-latest'
+        run: npx electron-builder --win --publish never
+
+      - name: Package Electron (macOS)
+        if: matrix.os == 'macos-latest'
+        run: npx electron-builder --mac --publish never
 
       - name: Upload artifacts (Linux)
         if: matrix.os == 'ubuntu-latest'
@@ -51,7 +63,7 @@ jobs:
           name: windows-build
           path: |
             dist/*.exe
-          if-no-files-found: ignore
+          if-no-files-found: error
 
       - name: Upload artifacts (macOS)
         if: matrix.os == 'macos-latest'
