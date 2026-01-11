@@ -63,6 +63,7 @@
       "output": "dist",
       "buildResources": "build"
     },
+    "asar": false,
     "files": [
       "build/**/*",
       "electron/**/*.cjs",
