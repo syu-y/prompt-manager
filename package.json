@@ -1,6 +1,11 @@
 {
   "name": "prompt-manager",
   "version": "0.1.0",
+  "description": "Desktop application for managing AI prompts with Markdown support",
+  "author": {
+    "name": "mono",
+    "email": "monoqlo.contact73@gmail.com"
+  },
   "type": "module",
   "private": true,
   "main": "electron/main.js",
@@ -91,7 +96,8 @@
         "AppImage",
         "deb"
       ],
-      "category": "Development"
+      "category": "Development",
+      "maintainer": "mono <monoqlo.contact73@gmail.com>"
     },
     "nsis": {
       "oneClick": false,
