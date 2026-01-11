@@ -9,7 +9,7 @@
   "type": "module",
   "private": true,
   "publish": null,
-  "main": "electron/main.js",
+  "main": "electron/main.cjs",
   "engines": {
     "node": ">=18.0.0 <25.0.0",
     "npm": ">=9.0.0"
@@ -23,7 +23,7 @@
     "postinstall": "npm run rebuild",
     "build": "npm run build:vite && npm run build:electron && electron-builder",
     "build:vite": "vite build",
-    "build:electron": "cd electron && tsc && cd ..",
+    "build:electron": "cd electron && tsc && node ../scripts/rename-to-cjs.js && cd ..",
     "preview": "vite preview",
     "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
     "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
@@ -65,8 +65,8 @@
     },
     "files": [
       "build/**/*",
-      "electron/**/*.js",
-      "electron/**/*.js.map",
+      "electron/**/*.cjs",
+      "electron/**/*.cjs.map",
       "package.json"
     ],
     "mac": {

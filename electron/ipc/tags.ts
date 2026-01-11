@@ -1,5 +1,6 @@
 import { IpcMain } from 'electron';
-import { getDatabase, generateId, now } from '../db/index.js';
+// @ts-ignore
+import { getDatabase, generateId, now } from '../db/index.cjs';
 
 export function registerTagHandlers(ipcMain: IpcMain): void {
   // タグ一覧（全プロジェクト共通）

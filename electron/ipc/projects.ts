@@ -1,11 +1,12 @@
 import { IpcMain } from 'electron';
-import { getDatabase, generateId, now } from '../db/index.js';
+// @ts-ignore
+import { getDatabase, generateId, now } from '../db/index.cjs';
 
 export function registerProjectHandlers(ipcMain: IpcMain): void {
   // プロジェクト一覧
   ipcMain.handle('projects:list', async () => {
     const db = getDatabase();
-    
+
     const projects = db.prepare(`
       SELECT 
         p.id,
