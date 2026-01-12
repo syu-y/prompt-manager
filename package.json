@@ -22,7 +22,7 @@
     "rebuild": "electron-rebuild -f -w better-sqlite3",
     "postinstall": "npm run rebuild",
     "build": "npm run build:vite && npm run build:electron && electron-builder",
-    "build:vite": "vite build",
+    "build:vite": "vite build && node scripts/fix-paths.js",
     "build:electron": "cd electron && tsc && node ../scripts/rename-to-cjs.js && cd ..",
     "preview": "vite preview",
     "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
