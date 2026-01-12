@@ -54,6 +54,7 @@
   },
   "dependencies": {
     "better-sqlite3": "^9.6.0",
+    "electron-serve": "^3.0.0",
     "marked": "^17.0.1"
   },
   "build": {

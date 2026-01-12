@@ -1,10 +1,10 @@
-import { app, BrowserWindow, ipcMain, Menu, net, protocol } from 'electron';
+import { app, BrowserWindow, ipcMain, Menu } from 'electron';
+import serve from 'electron-serve';
 import * as path from 'path';
 import { initDatabase } from './db/index.js';
 import { registerProjectHandlers } from './ipc/projects.js';
 import { registerEntryHandlers } from './ipc/entries.js';
 import { registerTagHandlers } from './ipc/tags.js';
-import { pathToFileURL } from 'url';
 
 // IME（日本語入力）を有効化
 // Linux/WSL2環境での日本語入力を改善
@@ -17,6 +17,8 @@ if (process.platform === 'linux') {
 
 let mainWindow: BrowserWindow | null = null;
 
+const loadURL = serve({ directory: 'build' });
+
 function createWindow() {
   mainWindow = new BrowserWindow({
     frame: true,
@@ -24,7 +26,6 @@ function createWindow() {
     maximizable: true,
     resizable: true,
     closable: true,
-    // タイトル設定
     title: 'Prompt Manager',
     webPreferences: {
       preload: path.join(__dirname, 'preload.cjs'),
@@ -41,8 +42,8 @@ function createWindow() {
     mainWindow.loadURL('http://localhost:5173');
     mainWindow.webContents.openDevTools();
   } else {
-    mainWindow.loadFile(path.join(__dirname, '../build/index.html'));
-    mainWindow.webContents.openDevTools();  // デバッグ用
+    loadURL(mainWindow);
+    mainWindow.webContents.openDevTools();
   }
 
   mainWindow.on('closed', () => {
