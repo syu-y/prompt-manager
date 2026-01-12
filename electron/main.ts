@@ -1,9 +1,10 @@
-import { app, BrowserWindow, ipcMain, Menu } from 'electron';
+import { app, BrowserWindow, ipcMain, Menu, net, protocol } from 'electron';
 import * as path from 'path';
 import { initDatabase } from './db/index.js';
 import { registerProjectHandlers } from './ipc/projects.js';
 import { registerEntryHandlers } from './ipc/entries.js';
 import { registerTagHandlers } from './ipc/tags.js';
+import { pathToFileURL } from 'url';
 
 // IME（日本語入力）を有効化
 // Linux/WSL2環境での日本語入力を改善
@@ -59,6 +60,20 @@ function createWindow() {
 }
 
 app.whenReady().then(() => {
+
+  // プロトコルインターセプト（本番のみ）
+  if (process.env.NODE_ENV !== 'development') {
+    protocol.handle('file', (request) => {
+      const filePath = request.url.replace('file:///', '');
+
+      // HTMLリクエストはindex.htmlへ
+      if (filePath.includes('/build/') && !filePath.includes('.')) {
+        return net.fetch(pathToFileURL(path.join(__dirname, '../build/index.html')).toString());
+      }
+      return net.fetch(request.url);
+    });
+  }
+
   // データベース初期化
   initDatabase();
 
