@@ -1,10 +1,11 @@
-import { app, BrowserWindow, ipcMain, Menu } from 'electron';
-import serve from 'electron-serve';
+import { app, BrowserWindow, ipcMain, Menu, protocol } from 'electron';
 import * as path from 'path';
 import { initDatabase } from './db/index.js';
 import { registerProjectHandlers } from './ipc/projects.js';
 import { registerEntryHandlers } from './ipc/entries.js';
 import { registerTagHandlers } from './ipc/tags.js';
+import { createServer } from 'http';
+import { readFileSync } from 'fs';
 
 // IME（日本語入力）を有効化
 // Linux/WSL2環境での日本語入力を改善
@@ -16,8 +17,6 @@ if (process.platform === 'linux') {
 }
 
 let mainWindow: BrowserWindow | null = null;
-
-const loadURL = serve({ directory: 'build' });
 
 function createWindow() {
   mainWindow = new BrowserWindow({
@@ -42,8 +41,20 @@ function createWindow() {
     mainWindow.loadURL('http://localhost:5173');
     mainWindow.webContents.openDevTools();
   } else {
-    loadURL(mainWindow);
-    mainWindow.webContents.openDevTools();
+    const buildPath = path.join(__dirname, '../build');
+    createServer((req, res) => {
+      const file = req.url === '/' ? '/index.html' : req.url;
+      if (file) {
+        const filePath = path.join(buildPath, file);
+        try {
+          res.end(readFileSync(filePath));
+        } catch {
+          res.end(readFileSync(path.join(buildPath, 'index.html')));
+        }
+      }
+    }).listen(0, 'localhost', function () {
+      mainWindow?.loadURL(`http://localhost:${this.address().port}`);
+    });
   }
 
   mainWindow.on('closed', () => {
