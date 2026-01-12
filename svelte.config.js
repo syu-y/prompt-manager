@@ -8,7 +8,6 @@ const config = {
 		adapter: adapter({
 			pages: 'build',
 			assets: 'build',
-			// fallback: undefined,
 			fallback: 'index.html',
 			precompress: false,
 			strict: true
@@ -16,9 +15,7 @@ const config = {
     paths: {
       base: '',
       relative: true
-    },
-		appDir: '_app',
-		prerender: { handleHttpError: 'warn' }
+    }
 	}
 };
 

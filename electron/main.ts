@@ -41,15 +41,8 @@ function createWindow() {
     mainWindow.loadURL('http://localhost:5173');
     mainWindow.webContents.openDevTools();
   } else {
-    const indexPath = path.join(__dirname, '../build/index.html');
-    mainWindow.loadFile(indexPath);
-
+    mainWindow.loadFile(path.join(__dirname, '../build/index.html'));
     mainWindow.webContents.openDevTools();  // デバッグ用
-
-    // ナビゲーションを無視してクライアント側で処理
-    mainWindow.webContents.on('will-navigate', (event) => {
-      event.preventDefault();
-    });
   }
 
   mainWindow.on('closed', () => {
