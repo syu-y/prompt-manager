@@ -16,7 +16,9 @@ const config = {
     paths: {
       base: '',
       relative: true
-    }
+    },
+		appDir: '_app',
+		prerender: { handleHttpError: 'warn' }
 	}
 };
 

@@ -44,14 +44,12 @@ function createWindow() {
     const indexPath = path.join(__dirname, '../build/index.html');
     mainWindow.loadFile(indexPath);
 
-    // 404エラー時にindex.htmlにフォールバック
-    mainWindow.webContents.on('did-fail-load', (event, errorCode, errorDescription, validatedURL) => {
-      if (errorCode === -6) { // FILE_NOT_FOUND
-        mainWindow?.loadFile(indexPath);
-      }
-    });
+    mainWindow.webContents.openDevTools();  // デバッグ用
 
-    mainWindow.webContents.openDevTools();
+    // ナビゲーションを無視してクライアント側で処理
+    mainWindow.webContents.on('will-navigate', (event) => {
+      event.preventDefault();
+    });
   }
 
   mainWindow.on('closed', () => {
@@ -60,19 +58,6 @@ function createWindow() {
 }
 
 app.whenReady().then(() => {
-
-  // プロトコルインターセプト（本番のみ）
-  if (process.env.NODE_ENV !== 'development') {
-    protocol.handle('file', (request) => {
-      const filePath = request.url.replace('file:///', '');
-
-      // HTMLリクエストはindex.htmlへ
-      if (filePath.includes('/build/') && !filePath.includes('.')) {
-        return net.fetch(pathToFileURL(path.join(__dirname, '../build/index.html')).toString());
-      }
-      return net.fetch(request.url);
-    });
-  }
 
   // データベース初期化
   initDatabase();
