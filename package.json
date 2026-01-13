@@ -59,9 +59,10 @@
   "build": {
     "appId": "com.promptmanager.app",
     "productName": "Prompt Manager",
+    "icon": "resources/icon.png",
     "directories": {
       "output": "dist",
-      "buildResources": "build"
+      "buildResources": "resources"
     },
     "asar": false,
     "files": [
@@ -71,6 +72,7 @@
       "package.json"
     ],
     "mac": {
+      "icon": "resources/icon.png",
       "category": "public.app-category.developer-tools",
       "target": [
         "dmg",
@@ -78,6 +80,7 @@
       ]
     },
     "win": {
+      "icon": "resources/icon.png",
       "target": [
         {
           "target": "nsis",
@@ -94,6 +97,7 @@
       ]
     },
     "linux": {
+      "icon": "resources/icon.png",
       "target": [
         "AppImage",
         "deb"
