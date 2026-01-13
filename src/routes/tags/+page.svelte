@@ -42,6 +42,13 @@
     }
 
     try {
+      // ユニークチェック
+      const exists = tags.some(t => t.name.toLowerCase() === newTagName.trim().toLowerCase());
+      if (exists) {
+        alert('登録済のタグ名です');
+        return;
+      }
+
       await electronApi.tags.create(
         String(newTagName.trim()),
         String(newTagCategory),
