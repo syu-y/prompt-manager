@@ -58,6 +58,7 @@ function createWindow() {
     server.listen(0, 'localhost', () => {
       const port = (server.address() as AddressInfo).port;
       mainWindow?.loadURL(`http://localhost:${port}`);
+      mainWindow?.webContents.openDevTools();
     });
   }
 
