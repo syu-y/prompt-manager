@@ -374,7 +374,7 @@
     <!-- 中央ペイン：編集エリア -->
     <div class="editor-pane">
       <div class="pane-header">
-        <h3><img src="/src/lib/asset/pen.svg" alt="アイコン" />　編集</h3>
+        <h3>📝　編集</h3>
       </div>
       <div class="edit-form">
         <input
@@ -457,7 +457,7 @@
     <!-- 右ペイン：プレビューエリア -->
     <div class="preview-pane">
       <div class="pane-header">
-        <h3><img src="/src/lib/asset/eye.svg" alt="アイコン" />　プレビュー</h3>
+        <h3>👁　プレビュー</h3>
       </div>
       <div class="preview-content">
         {#if editTitle}
