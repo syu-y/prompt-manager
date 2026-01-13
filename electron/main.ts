@@ -44,13 +44,33 @@ function createWindow() {
   } else {
     const buildPath = path.join(__dirname, '../build');
     const server = createServer((req, res) => {
+
       const file = req.url === '/' ? '/index.html' : req.url;
+
       if (file) {
         const filePath = path.join(buildPath, file);
+
+
+        // MIME type設定
+        const ext = path.extname(filePath);
+        const mimeTypes: Record<string, string> = {
+          '.html': 'text/html',
+          '.js': 'application/javascript',
+          '.css': 'text/css',
+          '.json': 'application/json',
+          '.png': 'image/png',
+          '.jpg': 'image/jpeg',
+          '.svg': 'image/svg+xml'
+        };
+
         try {
-          res.end(readFileSync(filePath));
+          const content = readFileSync(filePath);
+          res.writeHead(200, { 'Content-Type': mimeTypes[ext] || 'text/plain' });
+          res.end(content);
         } catch {
-          res.end(readFileSync(path.join(buildPath, 'index.html')));
+          const content = readFileSync(path.join(buildPath, 'index.html'));
+          res.writeHead(200, { 'Content-Type': 'text/html' });
+          res.end(content);
         }
       }
     });
