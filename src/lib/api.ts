@@ -53,6 +53,9 @@ export const electronApi: API = {
     },
     delete(id: string) {
       return withIpcLog("projects", "delete", () => getApi().projects.delete(id), "Failed to delete project:");
+    },
+    exportAll(id: string) {
+      return withIpcLog("projects", "exportAll", () => getApi().projects.exportAll(id), "Failed to exportAll project:");
     }
   },
 
@@ -97,7 +100,10 @@ export const electronApi: API = {
         () => getApi().entries.toggleLock(id, is_locked),
         "Failed to toggle lock:"
       );
-    }
+    },
+    export(id: string) {
+      return withIpcLog("entries", "export", () => getApi().entries.export(id), "Failed to export project:");
+    },
   },
 
   tags: {

@@ -1,4 +1,3 @@
-// プロジェクト関連の型
 export interface ProjectSummary {
   id: string;
   name: string;
@@ -6,7 +5,6 @@ export interface ProjectSummary {
   entry_count?: number;
 }
 
-// エントリ関連の型
 export interface EntrySummary {
   id: string;
   title?: string;
@@ -30,7 +28,6 @@ export interface EntryDetail {
   tag_ids: string[];
 }
 
-// タグ関連の型
 export interface Tag {
   id: string;
   name: string;
@@ -46,6 +43,7 @@ export type API = {
     create(name: string): Promise<{ id: string }>;
     update(id: string, name: string): Promise<{ ok: true }>;
     delete(id: string): Promise<{ ok: true }>;
+    exportAll: (projectId: string) => Promise<{ success: boolean, count?: number }>;
   };
   entries: {
     list(params: {
@@ -68,6 +66,7 @@ export type API = {
     delete(id: string): Promise<{ ok: true }>;
     toggleStar(id: string, is_starred: boolean): Promise<{ ok: true }>;
     toggleLock(id: string, is_locked: boolean): Promise<{ ok: true }>;
+    export: (entryId: string) => Promise<{ success: boolean }>;
   };
   tags: {
     list(): Promise<{ tags: Tag[] }>;

@@ -4,15 +4,14 @@ import type { API } from './api-types';
 
 // API定義
 const api: API = {
-  // Projects
   projects: {
     list: () => ipcRenderer.invoke('projects:list'),
     create: (name: string) => ipcRenderer.invoke('projects:create', { name }),
     update: (id: string, name: string) => ipcRenderer.invoke('projects:update', { id, name }),
-    delete: (id: string) => ipcRenderer.invoke('projects:delete', { id })
+    delete: (id: string) => ipcRenderer.invoke('projects:delete', { id }),
+    exportAll: (id: string) => ipcRenderer.invoke('projects:exportAll', { id })
   },
 
-  // Entries
   entries: {
     list: (params: {
       project_id: string;
@@ -40,10 +39,11 @@ const api: API = {
       ipcRenderer.invoke('entries:toggleStar', { id, is_starred }),
 
     toggleLock: (id: string, is_locked: boolean) =>
-      ipcRenderer.invoke('entries:toggleLock', { id, is_locked })
+      ipcRenderer.invoke('entries:toggleLock', { id, is_locked }),
+
+    export: (id: string) => ipcRenderer.invoke('entries:export', { id }),
   },
 
-  // Tags
   tags: {
     list: () => ipcRenderer.invoke('tags:list'),
     create: (name: string, category?: string, color?: string) =>

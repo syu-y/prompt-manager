@@ -2,12 +2,16 @@
   --color-bg: #ffffff;
   --color-bg-secondary: #f8f9fa;
   --color-border: #dee2e6;
+  --color-border-black: #212529;
   --color-text: #212529;
+  --color-text-white: #ffffff;
   --color-text-secondary: #6c757d;
   --color-primary: #0d6efd;
   --color-primary-hover: #0b5ed7;
   --color-danger: #dc3545;
   --color-success: #198754;
+  --color-bg-thirdly: #00be3f;
+  --color-bg-thirdly-hover: #00b33b;
 }
 
 * {
@@ -70,4 +74,13 @@ input, textarea {
 
 .btn-secondary:hover {
   background-color: #e9ecef;
+}
+
+.btn-thirdly {
+  background-color: var(--color-bg-thirdly);
+  color: white;
+}
+
+.btn-thirdly:hover {
+  background-color: var(--color-bg-thirdly-hover);
 }

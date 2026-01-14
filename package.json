@@ -36,6 +36,7 @@
     "@sveltejs/adapter-static": "^3.0.5",
     "@sveltejs/kit": "^2.8.5",
     "@sveltejs/vite-plugin-svelte": "^5.0.2",
+    "@types/adm-zip": "^0.5.7",
     "@types/better-sqlite3": "^7.6.12",
     "@types/node": "^22.10.2",
     "concurrently": "^9.1.2",
@@ -53,6 +54,7 @@
     "wait-on": "^8.0.1"
   },
   "dependencies": {
+    "adm-zip": "^0.5.16",
     "better-sqlite3": "^9.6.0",
     "marked": "^17.0.1"
   },

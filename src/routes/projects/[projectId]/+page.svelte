@@ -22,6 +22,7 @@
   let isNewEntry = $state(true);
   let loading = $state(true);
   let searchQuery = $state('');
+  let isExporting = $state(false);
 
   // ソート機能
   let sortBy = $state<'title' | 'created' | 'updated' | 'starred'>('created');
@@ -248,7 +249,6 @@
     }
   }
 
-  // カテゴリ別にタグをグループ化
   function getTagsByCategory(category: string): Tag[] {
     return allTags.filter(tag => tag.category === category);
   }
@@ -268,6 +268,40 @@
     });
   }
 
+  async function exportEntry() {
+    isExporting = true;
+    if (!selectedEntry) {
+      alert('出力対象を履歴から選択してください。');
+      return;
+    }
+
+    try {
+      const result = await electronApi.entries.export(selectedEntry?.id);
+      if (result.success) {
+        alert('エクスポートしました');
+      } else{
+        alert('エクスポートに失敗しました');
+      }
+    } finally {
+      isExporting = false;
+    }
+  }
+
+  async function exportProject() {
+    isExporting = true;
+
+    try {
+      const result = await electronApi.projects.exportAll(projectId);
+      if (result.success) {
+        alert('エクスポートしました');
+      } else{
+        alert('エクスポートに失敗しました');
+      }
+    } finally {
+      isExporting = false;
+    }
+  }
+
   // 検索時に再読み込み
   $effect(() => {
     if (searchQuery !== undefined) {
@@ -275,6 +309,12 @@
     }
   });
 </script>
+
+{#if isExporting}
+  <div class="loading-overlay">
+    <div class="loading-spinner">エクスポート中...</div>
+  </div>
+{/if}
 
 <div class="project-detail">
   <header class="header">
@@ -290,6 +330,8 @@
     <button class="btn btn-primary btn-sm" onclick={startNewEntry}>
       ＋ 新規
     </button>
+    <button class="btn btn-thirdly btn-sm" onclick={exportEntry}>⇓　エクスポート</button>
+    <button class="btn btn-thirdly btn-sm" onclick={exportProject}>⇓　全件エクスポート</button>
   </header>
 
   <div class="content">
@@ -472,6 +514,23 @@
 </div>
 
 <style>
+  .loading-overlay {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+  }
+  .loading-spinner {
+    background: white;
+    padding: 24px 48px;
+    border-radius: 8px;
+    font-size: 18px;
+  }
+  
   .project-detail {
     display: flex;
     flex-direction: column;

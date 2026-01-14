@@ -1,6 +1,7 @@
-import { IpcMain } from 'electron';
+import { dialog, IpcMain } from 'electron';
 // @ts-ignore
 import { getDatabase, generateId, now } from '../db/index.cjs';
+import { writeFileSync } from 'fs';
 
 interface ListEntriesParams {
   project_id: string;
@@ -236,5 +237,30 @@ export function registerEntryHandlers(ipcMain: IpcMain): void {
     `).run(is_locked ? 1 : 0, id);
 
     return { ok: true };
+  });
+
+
+  // 1件エクスポート
+  ipcMain.handle('entries:export', async (event, { id }) => {
+    const db = getDatabase();
+
+    const entry = db.prepare(`
+      SELECT * FROM prompt_entries 
+      WHERE id = ? 
+      ORDER BY created_at DESC
+    `).get(id);
+
+    const fileName = entry.title === null ? '無題' : entry.title;
+    const { filePath } = await dialog.showSaveDialog({
+      defaultPath: `${fileName}.md`,
+      filters: [{ name: 'Markdown', extensions: ['md'] }]
+    });
+
+    if (filePath) {
+      let content = `${entry.body_markdown}`;
+      writeFileSync(filePath, content, 'utf8');
+      return { success: true };
+    }
+    return { success: false };
   });
 }

@@ -1,6 +1,9 @@
-import { IpcMain } from 'electron';
+import { IpcMain, dialog } from 'electron';
+import { writeFileSync, mkdirSync } from 'fs';
+import AdmZip from 'adm-zip';
 // @ts-ignore
 import { getDatabase, generateId, now } from '../db/index.cjs';
+import { EntryDetail } from '../api-types';
 
 export function registerProjectHandlers(ipcMain: IpcMain): void {
   // プロジェクト一覧
@@ -57,5 +60,36 @@ export function registerProjectHandlers(ipcMain: IpcMain): void {
     db.prepare('DELETE FROM projects WHERE id = ?').run(id);
 
     return { ok: true };
+  });
+
+  // 全件エクスポート
+  ipcMain.handle('projects:exportAll', async (event, { id }) => {
+    const db = getDatabase();
+    const project = db.prepare('SELECT * FROM projects WHERE id = ?').get(id);
+    const entries = db.prepare(`
+      SELECT * FROM prompt_entries 
+      WHERE project_id = ? 
+      ORDER BY created_at DESC
+    `).all(id);
+
+    const { filePath } = await dialog.showSaveDialog({
+      defaultPath: `${project.name}.zip`,
+      filters: [{ name: 'ZIP', extensions: ['zip'] }]
+    });
+
+    if (filePath) {
+      const zip = new AdmZip();
+
+      entries.forEach((e: EntryDetail) => {
+        const fileName = e.title === null ? '無題' : e.title;
+        const content = `${e.body_markdown}`;
+        zip.addFile(`${fileName}_${e.created_at}.md`, Buffer.from(content, 'utf8'));
+      });
+      zip.writeZip(filePath);
+
+      return { success: true, count: entries.length };
+    }
+
+    return { success: false };
   });
 }
