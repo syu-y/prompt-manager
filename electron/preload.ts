@@ -1,4 +1,4 @@
-import { contextBridge, ipcRenderer } from 'electron';
+import { contextBridge, ipcRenderer, clipboard } from 'electron';
 import type { API } from './api-types';
 
 
@@ -51,6 +51,9 @@ const api: API = {
     delete: (id: string) => ipcRenderer.invoke('tags:delete', { id }),
     attach: (entry_id: string, tag_ids: string[]) =>
       ipcRenderer.invoke('tags:attach', { entry_id, tag_ids })
+  },
+  clipboard: {
+    writeText: (text: string) => clipboard.writeText(text)
   }
 };
 

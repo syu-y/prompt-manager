@@ -74,4 +74,7 @@ export type API = {
     delete(id: string): Promise<{ ok: true }>;
     attach(entry_id: string, tag_ids: string[]): Promise<{ ok: true }>;
   };
+  clipboard: {
+    writeText: (text: string) => void;
+  };
 };

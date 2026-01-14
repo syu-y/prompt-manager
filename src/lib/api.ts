@@ -119,5 +119,11 @@ export const electronApi: API = {
     attach(entry_id: string, tag_ids: string[]) {
       return withIpcLog("tags", "attach", () => getApi().tags.attach(entry_id, tag_ids), "Failed to attach tags:");
     }
+  },
+
+  clipboard: {
+    writeText(text: string) {
+      return withIpcLog("clipboard", "writeText", () => getApi().clipboard.writeText(text), "Failed to writeText clipboard:");
+    }
   }
 };

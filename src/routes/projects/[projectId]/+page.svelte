@@ -2,7 +2,7 @@
   import { onMount } from 'svelte';
   import { marked } from 'marked';
   import { electronApi } from '$lib/api';
-  import type { EntryDetail, EntrySummary, Tag } from '../../../../electron/api-types';
+  import type { EntryDetail, EntrySummary, ProjectSummary, Tag } from '../../../../electron/api-types';
   
   // Markdownパーサーの設定
   marked.setOptions({
@@ -17,6 +17,8 @@
   };
 
   let projectId = $state('');
+  let projectName = $state('');
+  let projects: ProjectSummary[] = $state([]);
   let entries: EntrySummary[] = $state([]);
   let selectedEntry: EntryDetail | null = $state(null);
   let isNewEntry = $state(true);
@@ -88,6 +90,13 @@
 
   onMount(async () => {
     projectId = getProjectIdFromUrl();
+    // プロジェクト情報を取得
+    const result = await window.api.projects.list();
+    projects = result.projects;
+    const project = projects.find(p => p.id === projectId);
+    if (project) {
+      projectName = project.name;
+    }
     await loadTags();
     await loadEntries();
   });
@@ -203,7 +212,10 @@
   async function deleteEntry() {
     if (!selectedEntry) return;
     if (!confirm('このエントリを削除しますか？')) return;
-
+    if (editIsLocked && selectedEntry) {
+      alert('ロック中のエントリは編集できません。先にロックを解除してください。');
+      return;
+    }
     try {
       await electronApi.entries.delete(selectedEntry.id);
       await loadEntries();
@@ -253,9 +265,15 @@
     return allTags.filter(tag => tag.category === category);
   }
 
-  function copyToClipboard() {
-    navigator.clipboard.writeText(editBody);
-    alert('クリップボードにコピーしました');
+  async function copyToClipboard() {
+    // navigator.clipboard.writeText(editBody);
+    // alert('クリップボードにコピーしました');
+    try {
+      electronApi.clipboard.writeText(editBody);
+      alert('コピーしました');
+    } catch (error) {
+      alert('コピーに失敗しました');
+    }
   }
 
   function formatDate(timestamp: number): string {
@@ -302,6 +320,14 @@
     }
   }
 
+  function clearBody() {
+    if (editIsLocked && selectedEntry) {
+      alert('ロック中のエントリは編集できません。先にロックを解除してください。');
+      return;
+    }
+    editBody = '';
+  }
+
   // 検索時に再読み込み
   $effect(() => {
     if (searchQuery !== undefined) {
@@ -321,19 +347,24 @@
     <button class="btn btn-secondary back-btn" onclick={() => window.location.href = '/'}>
       ← 戻る
     </button>
+
+    <input class="project-title" type="text" value={projectName} disabled/>
     <input
       type="search"
-      placeholder="検索..."
+      placeholder="プロジェクト内のプロンプトを全文検索..."
       bind:value={searchQuery}
       class="search-input"
     />
     <button class="btn btn-primary btn-sm" onclick={startNewEntry}>
       ＋ 新規
     </button>
-    <button class="btn btn-thirdly btn-sm" onclick={exportEntry}>⇓　エクスポート</button>
-    <button class="btn btn-thirdly btn-sm" onclick={exportProject}>⇓　全件エクスポート</button>
-  </header>
 
+    <div class="header-actions">
+      <button class="btn btn-thirdly btn-sm" onclick={exportEntry}>⇓　エクスポート</button>
+      <button class="btn btn-thirdly btn-sm" onclick={exportProject}>⇓　全件エクスポート</button>
+    </div>
+  </header>
+    
   <div class="content">
     <!-- 左ペイン：履歴一覧 -->
     <aside class="sidebar" class:closed={!sidebarOpen}>
@@ -488,8 +519,8 @@
                 🗑️ 削除
               </button>
             {/if}
-            <button class="btn btn-secondary" onclick={startNewEntry}>
-              📄 新規クリア
+            <button class="btn btn-secondary" onclick={clearBody}>
+              📄 クリア
             </button>
           </div>
         </div>
@@ -530,7 +561,7 @@
     border-radius: 8px;
     font-size: 18px;
   }
-  
+
   .project-detail {
     display: flex;
     flex-direction: column;
@@ -544,6 +575,26 @@
     padding: 1rem 1.5rem;
     background-color: white;
     border-bottom: 1px solid var(--color-border);
+  }
+
+  .project-title {
+    min-width: 400px;
+    max-width: 400px;
+    padding: 5px 10px;
+    /* border: none; */
+    /* background: transparent; */
+    font-size: 18px;
+    font-weight: 600;
+    color: #333;
+    /* padding: 0; */
+    cursor: default;
+    flex-shrink: 0;
+  }
+
+  .header-actions {
+    margin-left: auto;
+    display: flex;
+    gap: 8px;
   }
 
   .back-btn {
