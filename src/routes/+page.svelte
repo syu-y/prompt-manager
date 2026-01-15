@@ -7,6 +7,9 @@
   let loading = $state(true);
   let showCreateModal = $state(false);
   let newProjectName = $state('');
+  let filteredProjects: ProjectSummary[] = $state([]);
+  let searchQuery = $state('');
+  let sortBy: 'name_asc' | 'name_desc' | 'updated_desc' | 'updated_asc' = 'updated_desc';
 
   onMount(async () => {
     await loadProjects();
@@ -16,8 +19,8 @@
     try {
       loading = true;
       const result = await electronApi.projects.list();
-      console.log('Result:', result);
       projects = result?.projects;
+      applyFilterAndSort();
     } catch (error) {
       console.error('Failed to load projects:', error);
       console.error('Error details:', {
@@ -29,6 +32,40 @@
     } finally {
       loading = false;
     }
+  }
+
+  function applyFilterAndSort() {
+    // フィルタリング
+    let filtered = projects;
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = projects.filter(p => 
+        p.name.toLowerCase().includes(query)
+      );
+    }
+    
+    // ソート
+    filteredProjects = [...filtered].sort((a, b) => {
+      switch (sortBy) {
+        case 'name_asc':
+          return a.name.localeCompare(b.name);
+        case 'name_desc':
+          return b.name.localeCompare(a.name);
+        case 'updated_asc':
+          return a.updated_at - b.updated_at;
+        case 'updated_desc':
+        default:
+          return b.updated_at - a.updated_at;
+      }
+    });
+  }
+
+  function search() {
+    applyFilterAndSort();
+  }
+
+  function sortChange() {
+    applyFilterAndSort();
   }
 
   async function createProject() {
@@ -71,7 +108,24 @@
 
 <div class="projects-page">
   <header class="header">
-    <h1>Prompt Manager</h1>
+    <h1>プロジェクト一覧</h1>
+    <div>
+      <input 
+      type="text" 
+      class="search-input"
+      bind:value={searchQuery}
+      oninput={search}
+      placeholder="プロジェクト名で絞り込み..."
+      />
+      
+      <select bind:value={sortBy} onchange={sortChange} class="sort-select">
+        <option value="updated_desc">更新日時（新しい順）</option>
+        <option value="updated_asc">更新日時（古い順）</option>
+        <option value="name_asc">名前（A-Z）</option>
+        <option value="name_desc">名前（Z-A）</option>
+      </select>
+    </div>
+
     <div class="header-actions">
       <button class="btn btn-secondary" onclick={() => window.location.href = '/tags'}>
         🏷️ タグ管理
@@ -81,6 +135,7 @@
       </button>
     </div>
   </header>
+
 
   <main class="main">
     {#if loading}
@@ -92,7 +147,7 @@
       </div>
     {:else}
       <div class="projects-grid">
-        {#each projects as project (project.id)}
+        {#each filteredProjects as project (project.id)}
           <div class="project-card">
             <a href="/projects/{project.id}" class="project-link">
               <h2>{project.name}</h2>
@@ -161,19 +216,41 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 1.5rem 2rem;
+    gap: 12px;
+    padding: 16px;
+    /* padding: 1.5rem 2rem; */
     background-color: white;
     border-bottom: 1px solid var(--color-border);
   }
 
   .header h1 {
-    font-size: 1.5rem;
+    font-size: 1.25rem;
     font-weight: 600;
+
+    margin: 0;
+    flex-shrink: 0;
+  }
+
+  .search-input {
+    width: 250px;
+    padding: 6px 12px;
+    margin-left: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+  }
+
+  .sort-select {
+    padding: 6px 12px;
+    margin-left: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background: white;
   }
 
   .header-actions {
     display: flex;
-    gap: 0.75rem;
+    gap: 8px;
+    margin-left: auto;
   }
 
   .main {
