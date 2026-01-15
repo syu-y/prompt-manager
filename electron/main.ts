@@ -10,12 +10,8 @@ import { registerTagHandlers } from './ipc/tags.js';
 import { registerTemplateHandlers } from './ipc/templates.js';
 import { registerClipboardHandlers } from './ipc/clipboard.js';
 
-// IME（日本語入力）を有効化
-// Linux/WSL2環境での日本語入力を改善
 if (process.platform === 'linux') {
-  // X11でのIME有効化を試みる
   app.commandLine.appendSwitch('disable-features', 'UseOzonePlatform');
-  // GPU加速を無効化することでIMEの問題を回避
   app.commandLine.appendSwitch('disable-gpu');
 }
 
@@ -39,7 +35,6 @@ function createWindow() {
   // ウィンドウを最大化
   mainWindow.maximize();
 
-  // 開発環境ではlocalhost、本番環境ではビルドしたファイルを読み込む
   if (process.env.NODE_ENV === 'development') {
     mainWindow.loadURL('http://localhost:5173');
     mainWindow.webContents.openDevTools();
@@ -52,8 +47,6 @@ function createWindow() {
       if (file) {
         const filePath = path.join(buildPath, file);
 
-
-        // MIME type設定
         const ext = path.extname(filePath);
         const mimeTypes: Record<string, string> = {
           '.html': 'text/html',
@@ -80,7 +73,7 @@ function createWindow() {
     server.listen(0, 'localhost', () => {
       const port = (server.address() as AddressInfo).port;
       mainWindow?.loadURL(`http://localhost:${port}`);
-      mainWindow?.webContents.openDevTools();
+      // mainWindow?.webContents.openDevTools();
     });
   }
 
@@ -104,6 +97,7 @@ app.whenReady().then(() => {
   // メニューバーを非表示にする
   Menu.setApplicationMenu(null);
 
+  // 画面を作成する
   createWindow();
 
   app.on('activate', () => {

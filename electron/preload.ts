@@ -1,8 +1,6 @@
 import { contextBridge, ipcRenderer } from 'electron';
 import type { API } from './api-types';
 
-
-// API定義
 const api: API = {
   projects: {
     list: () => ipcRenderer.invoke('projects:list'),

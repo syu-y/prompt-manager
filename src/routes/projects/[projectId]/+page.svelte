@@ -193,7 +193,6 @@
     }
 
     try {
-      // Svelte 5のProxyオブジェクトをプリミティブな値に変換
       const params = {
         id: isNewEntry ? undefined : (selectedEntry?.id ? String(selectedEntry.id) : undefined),
         project_id: String(projectId),
@@ -205,7 +204,7 @@
       };
       
       const result = await electronApi.entries.upsert(params);
-      console.log('Save result:', result);
+
       if (!result || !result.id) {
         alert('保存に失敗しました（レスポンスが不正です）');
         return;
