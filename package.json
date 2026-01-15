@@ -1,6 +1,6 @@
 {
   "name": "prompt-manager",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Desktop application for managing AI prompts with Markdown support",
   "author": {
     "name": "syu-y",
