@@ -288,12 +288,13 @@
 
   async function exportEntry() {
     isExporting = true;
-    if (!selectedEntry) {
-      alert('出力対象を履歴から選択してください。');
-      return;
-    }
 
     try {
+      if (!selectedEntry) {
+        alert('出力対象を履歴から選択してください。');
+        return;
+      }
+
       const result = await electronApi.entries.export(selectedEntry?.id);
       if (result.success) {
         alert('エクスポートしました');
@@ -533,9 +534,9 @@
         <h3>👁　プレビュー</h3>
       </div>
       <div class="preview-content">
-        {#if editTitle}
+        <!-- {#if editTitle}
           <h1>{editTitle}</h1>
-        {/if}
+        {/if} -->
         <div class="markdown-body">
           {@html renderedMarkdown}
         </div>

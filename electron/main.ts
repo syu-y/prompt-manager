@@ -1,12 +1,13 @@
-import { app, BrowserWindow, ipcMain, Menu, protocol } from 'electron';
+import { app, BrowserWindow, ipcMain, Menu } from 'electron';
+import { createServer } from 'http';
+import { readFileSync } from 'fs';
+import { AddressInfo } from 'net';
 import * as path from 'path';
 import { initDatabase } from './db/index.js';
 import { registerProjectHandlers } from './ipc/projects.js';
 import { registerEntryHandlers } from './ipc/entries.js';
 import { registerTagHandlers } from './ipc/tags.js';
-import { createServer } from 'http';
-import { readFileSync } from 'fs';
-import { AddressInfo } from 'net';
+import { registerClipboardHandlers } from './ipc/clipboard.js';
 
 // IME（日本語入力）を有効化
 // Linux/WSL2環境での日本語入力を改善
@@ -96,6 +97,7 @@ app.whenReady().then(() => {
   registerProjectHandlers(ipcMain);
   registerEntryHandlers(ipcMain);
   registerTagHandlers(ipcMain);
+  registerClipboardHandlers(ipcMain);
 
   // メニューバーを非表示にする
   Menu.setApplicationMenu(null);

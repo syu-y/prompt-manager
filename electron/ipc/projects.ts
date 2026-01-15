@@ -1,5 +1,4 @@
 import { IpcMain, dialog } from 'electron';
-import { writeFileSync, mkdirSync } from 'fs';
 import AdmZip from 'adm-zip';
 // @ts-ignore
 import { getDatabase, generateId, now } from '../db/index.cjs';
