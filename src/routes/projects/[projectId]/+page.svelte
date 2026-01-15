@@ -2,7 +2,7 @@
   import { onMount } from 'svelte';
   import { marked } from 'marked';
   import { electronApi } from '$lib/api';
-  import type { EntryDetail, EntrySummary, ProjectSummary, Tag } from '../../../../electron/api-types';
+  import type { EntryDetail, EntrySummary, ProjectSummary, Tag, Template } from '../../../../electron/api-types';
   
   // Markdownパーサーの設定
   marked.setOptions({
@@ -36,6 +36,11 @@
   // タグ関連
   let allTags: Tag[] = $state([]);
   let selectedTagIds: string[] = $state([]);
+
+  // テンプレート関連
+  let templates: Template[] = $state([]);
+  let selectedTemplate: string = $state('');
+  let templateIds: string[] = $state([]);
 
   // 編集フォーム
   let editTitle = $state('');
@@ -98,6 +103,7 @@
       projectName = project.name;
     }
     await loadTags();
+    await loadTemplates();
     await loadEntries();
   });
 
@@ -107,6 +113,16 @@
       allTags = result.tags;
     } catch (error) {
       console.error('Failed to load tags:', error);
+    }
+  }
+
+  async function loadTemplates() {
+    try {
+      const result = await electronApi.templates.list();
+      templates = result.templates;
+      templateIds = templates.map(template => template.id);
+    } catch (error) {
+      console.error('Failed to load templates:', error);
     }
   }
 
@@ -265,9 +281,22 @@
     return allTags.filter(tag => tag.category === category);
   }
 
+  function applyTemplate() {
+    if (!confirm('現在の入力内容を上書きしますか？')) return;
+
+    if (editIsLocked && selectedEntry) {
+      alert('ロック中のエントリは編集できません。先にロックを解除してください。');
+      return;
+    }
+
+    const template = templates.find(t => t.id === selectedTemplate);
+    if (template) {
+      editTitle = template.name;
+      editBody = template.body_markdown;
+    }
+  }
+
   async function copyToClipboard() {
-    // navigator.clipboard.writeText(editBody);
-    // alert('クリップボードにコピーしました');
     try {
       electronApi.clipboard.writeText(editBody);
       alert('コピーしました');
@@ -322,6 +351,7 @@
   }
 
   function clearBody() {
+    if (!confirm('現在の入力内容をクリアしますか？')) return;
     if (editIsLocked && selectedEntry) {
       alert('ロック中のエントリは編集できません。先にロックを解除してください。');
       return;
@@ -449,6 +479,16 @@
     <div class="editor-pane">
       <div class="pane-header">
         <h3>📝　編集</h3>
+        <!-- ソート選択UI -->
+        <div class="template-controls">
+          <select bind:value={selectedTemplate} class="sort-select">
+            <option value="">-- テンプレートを選択 --</option>
+            {#each templates as template}
+              <option value={template.id}>{template.name}</option>
+            {/each}
+          </select>
+          <button class="btn btn-thirdly btn-sm" onclick={applyTemplate}>適用</button>
+        </div>
       </div>
       <div class="edit-form">
         <input
@@ -635,7 +675,6 @@
     justify-content: space-between;
     align-items: center;
     padding: 1rem;
-    border-bottom: 1px solid var(--color-border);
     min-height: 60px;
   }
 
@@ -775,6 +814,7 @@
     padding: 1rem 1.5rem;
     background-color: white;
     border-bottom: 1px solid var(--color-border);
+    display: flex;
   }
 
   .pane-header h3 {
@@ -786,6 +826,10 @@
     align-items: center;
   }
 
+  .template-controls {
+    margin-left: auto;
+  }
+  
   .edit-form {
     flex: 1;
     display: flex;
@@ -834,11 +878,6 @@
     margin: 1.5rem;
     border: 1px solid var(--color-border);
     border-radius: 4px;
-  }
-
-  .preview-content h1 {
-    font-size: 1.5rem;
-    margin-bottom: 1rem;
   }
 
   .markdown-body {

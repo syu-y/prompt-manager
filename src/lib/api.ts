@@ -121,6 +121,18 @@ export const electronApi: API = {
     }
   },
 
+  templates: {
+    list(projectId?: string) {
+      return withIpcLog("templates", "list", () => getApi().templates.list(projectId), "Failed to list templates:");
+    },
+    upsert(params: { id?: string; projectId?: string; name: string; body_markdown: string }) {
+      return withIpcLog("templates", "upsert", () => getApi().templates.upsert(params), "Failed to upsert templates:");
+    },
+    delete(id: string) {
+      return withIpcLog("templates", "delete", () => getApi().templates.delete(id), "Failed to delete templates:");
+    }
+  },
+
   clipboard: {
     writeText(text: string) {
       return withIpcLog("clipboard", "writeText", () => getApi().clipboard.writeText(text), "Failed to writeText clipboard:");

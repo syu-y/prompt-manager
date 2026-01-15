@@ -52,6 +52,13 @@ const api: API = {
     attach: (entry_id: string, tag_ids: string[]) =>
       ipcRenderer.invoke('tags:attach', { entry_id, tag_ids })
   },
+
+  templates: {
+    list: (projectId?: string) => ipcRenderer.invoke('templates:list', { projectId }),
+    upsert: (data: any) => ipcRenderer.invoke('templates:upsert', data),
+    delete: (id: string) => ipcRenderer.invoke('templates:delete', { id })
+  },
+
   clipboard: {
     writeText: (text: string) => ipcRenderer.invoke('clipboard:writeText', text)
   }

@@ -36,6 +36,16 @@ export interface Tag {
   is_default: boolean;
 }
 
+export interface Template {
+  id: string;
+  project_id: string;
+  name: string;
+  body_markdown: string;
+  schema_json?: string;
+  created_at: number;
+  updated_at: number;
+}
+
 // APIの型
 export type API = {
   projects: {
@@ -73,6 +83,11 @@ export type API = {
     create(name: string, category?: string, color?: string): Promise<{ id: string }>;
     delete(id: string): Promise<{ ok: true }>;
     attach(entry_id: string, tag_ids: string[]): Promise<{ ok: true }>;
+  };
+  templates: {
+    list: (projectId?: string) => Promise<{ templates: Template[] }>;
+    upsert: (data: { id?: string; projectId?: string; name: string; body_markdown: string }) => Promise<{ id: string }>;
+    delete: (id: string) => Promise<{ ok: boolean }>;
   };
   clipboard: {
     writeText: (text: string) => void;

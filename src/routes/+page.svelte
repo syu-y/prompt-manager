@@ -9,7 +9,7 @@
   let newProjectName = $state('');
   let filteredProjects: ProjectSummary[] = $state([]);
   let searchQuery = $state('');
-  let sortBy: 'name_asc' | 'name_desc' | 'updated_desc' | 'updated_asc' = 'updated_desc';
+  let sortBy: 'name_asc' | 'name_desc' | 'updated_desc' | 'updated_asc' = $state('updated_desc');
 
   onMount(async () => {
     await loadProjects();
@@ -127,6 +127,7 @@
     </div>
 
     <div class="header-actions">
+      <button class="btn btn-secondary" onclick={() => window.location.href = '/templates'}>テンプレート管理</button>
       <button class="btn btn-secondary" onclick={() => window.location.href = '/tags'}>
         🏷️ タグ管理
       </button>

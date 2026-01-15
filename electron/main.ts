@@ -7,6 +7,7 @@ import { initDatabase } from './db/index.js';
 import { registerProjectHandlers } from './ipc/projects.js';
 import { registerEntryHandlers } from './ipc/entries.js';
 import { registerTagHandlers } from './ipc/tags.js';
+import { registerTemplateHandlers } from './ipc/templates.js';
 import { registerClipboardHandlers } from './ipc/clipboard.js';
 
 // IME（日本語入力）を有効化
@@ -97,6 +98,7 @@ app.whenReady().then(() => {
   registerProjectHandlers(ipcMain);
   registerEntryHandlers(ipcMain);
   registerTagHandlers(ipcMain);
+  registerTemplateHandlers(ipcMain);
   registerClipboardHandlers(ipcMain);
 
   // メニューバーを非表示にする
