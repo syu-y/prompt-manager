@@ -3,9 +3,10 @@
   "version": "0.1.0",
   "description": "Desktop application for managing AI prompts with Markdown support",
   "author": {
-    "name": "mono",
+    "name": "syu-y",
     "email": "monoqlo.contact73@gmail.com"
   },
+  "license": "MIT",
   "type": "module",
   "private": true,
   "publish": null,
@@ -105,7 +106,7 @@
         "deb"
       ],
       "category": "Development",
-      "maintainer": "mono <monoqlo.contact73@gmail.com>"
+      "maintainer": "syu-y <monoqlo.contact73@gmail.com>"
     },
     "nsis": {
       "oneClick": false,

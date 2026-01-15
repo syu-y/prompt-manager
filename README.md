@@ -1,98 +1,93 @@
 # Prompt Manager
 
-AIプロンプトを管理するデスクトップアプリケーション
+プロンプト管理のためのデスクトップアプリケーション
 
-## 技術スタック
+## Features
 
-- **TypeScript**: 型安全な開発
-- **SvelteKit**: UIフレームワーク
-- **Electron**: デスクトップアプリケーション
-- **SQLite (better-sqlite3)**: ローカルデータベース
+- プロジェクト単位でのプロンプト管理
+- 2ペイン構成（履歴一覧 + 編集エリア）
+- タグ機能（23種類のデフォルトタグ + カスタムタグ）
+- テンプレート機能
+- Markdownサポート
+- エクスポート機能（個別/全体ZIP）
+- 検索・ソート・絞り込み
+- クリップボードコピー
 
-## 機能
+## Installation
 
-- ✅ プロジェクト単位でプロンプトを管理
-- ✅ Markdown形式でプロンプトを作成・編集
-- ✅ 履歴管理とプレビュー機能
-- ✅ 検索機能
-- ✅ スター機能
-- 🚧 タグ付け機能（準備中）
-- 🚧 テンプレート機能（準備中）
+### Windows
 
-## セットアップ
+1. [Releases](https://github.com/yourusername/prompt-manager/releases)から最新の`Prompt Manager Setup X.X.X.exe`をダウンロード
+2. インストーラーを実行
+3. アプリケーションを起動
 
-### 1. 依存関係のインストール
+## Development
+
+### Prerequisites
+
+- Node.js 18.x以上
+- npm 9.x以上
+
+### Setup
 
 ```bash
+# リポジトリのクローン
+git clone https://github.com/yourusername/prompt-manager.git
+cd prompt-manager
+
+# 依存パッケージのインストール
 npm install
-```
 
-### 2. TypeScriptのコンパイル
-
-Electronのコードをコンパイルします：
-
-```bash
-cd electron
-npx tsc
-cd ..
-```
-
-### 3. 開発サーバーの起動
-
-```bash
+# 開発サーバーの起動
 npm run dev
 ```
 
-これにより以下が起動します：
-- SvelteKitの開発サーバー（ポート5173）
-- Electronアプリケーション
-
-## ビルド
-
-本番用のビルド：
+### Build
 
 ```bash
-npm run build:vite    # SvelteKitのビルド
-cd electron && npx tsc && cd ..  # Electronのコンパイル
-npm run electron:build  # Electronアプリのパッケージング
+# SvelteKitのビルド
+npm run build:vite
+
+# Electronのビルド
+npm run build:electron
+
+# パッケージング (Windows)
+npx electron-builder --win --publish never
 ```
 
-## プロジェクト構造
+## Technology Stack
 
-```
-prompt-manager/
-├── electron/           # Electronメインプロセス
-│   ├── main.ts        # エントリーポイント
-│   ├── preload.ts     # IPCブリッジ
-│   ├── db/            # データベース
-│   │   └── index.ts   # DB初期化・ヘルパー
-│   └── ipc/           # IPCハンドラ
-│       ├── projects.ts
-│       ├── entries.ts
-│       └── tags.ts
-├── src/               # SvelteKit (UI)
-│   ├── lib/
-│   │   └── api.ts     # IPC APIラッパー
-│   └── routes/        # ページ
-│       ├── +page.svelte           # プロジェクト一覧
-│       └── projects/[projectId]/
-│           └── +page.svelte       # プロジェクト詳細（2ペイン）
-└── package.json
-```
+- **Electron**: デスクトップアプリケーションフレームワーク
+- **SvelteKit**: UIフレームワーク
+- **SQLite**: ローカルデータベース
+- **better-sqlite3**: SQLiteバインディング
+- **marked**: Markdownパーサー
+- **adm-zip**: ZIPファイル生成
 
-## 開発時のメモ
+## License
 
-### データベースの場所
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-開発時のデータベースファイルは以下に作成されます：
-- macOS: `~/Library/Application Support/Electron/prompt-manager.db`
-- Windows: `%APPDATA%/Electron/prompt-manager.db`
-- Linux: `~/.config/Electron/prompt-manager.db`
+## Third-Party Licenses
 
-### デバッグ
+This application uses various open-source packages.
+ See [THIRD_PARTY_NOTICES](THIRD_PARTY_NOTICES.txt) for complete license information.
 
-Electronアプリ起動時に自動でDevToolsが開きます。
+Major dependencies:
+- Electron (MIT)
+- SvelteKit (MIT)
+- better-sqlite3 (MIT)
+- marked (MIT)
+- adm-zip (MIT)
 
-## ライセンス
+## Contributing
 
-MIT
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+## Author
+
+syu-y
+
+## Acknowledgments
+
+Special thanks to all the open-source projects that made this application possible.
